@@ -12,6 +12,7 @@ use App\Repositories\TransactionRepositoryInterface;
 use App\Exceptions\InsufficientBalanceException;
 use App\DTOs\TransactionData;
 use App\DTOs\ShebaRequestData;
+use App\DTOs\ShebaRequestFilterData;
 
 class ShebaService
 {
@@ -60,5 +61,10 @@ class ShebaService
 
             return $shebaRequest;
         });
+    }
+
+    public function getFilteredRequests(ShebaRequestFilterData $filter): \Illuminate\Support\Collection
+    {
+        return $this->shebaRequestRepository->getFiltered($filter);
     }
 } 
