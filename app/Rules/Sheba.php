@@ -8,7 +8,7 @@ class Sheba implements Rule
 {
     public function passes($attribute, $value)
     {
-ز        if (!preg_match('/^IR[0-9]{24}$/', $value)) {
+        if (!preg_match('/^IR[0-9]{24}$/', $value)) {
             return false;
         }
         $iban = substr($value, 4) . substr($value, 0, 4);

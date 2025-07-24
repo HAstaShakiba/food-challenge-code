@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Exceptions\InsufficientBalanceException;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,9 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        use App\Exceptions\InsufficientBalanceException;
-        use Illuminate\Http\Request;
-
         $exceptions->render(function (InsufficientBalanceException $e, Request $request) {
             return response()->json([
                 'message' => 'Insufficient balance',
