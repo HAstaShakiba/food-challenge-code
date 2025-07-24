@@ -11,11 +11,16 @@ class UserRepository implements UserRepositoryInterface
         return User::find($id);
     }
 
-    public function updateBalance(int|string $id, int $amount): bool
+    public function decrementBalanceWithLock(int $userId, int $amount): bool
     {
-        $user = User::find($id);
-        if (!$user) return false;
-        $user->decrement('balance', $amount);
-        return true;
+        return \DB::transaction(function () use ($userId, $amount) {
+            $user = User::where('id', $userId)->lockForUpdate()->first();
+            if (!$user || $user->balance < $amount) {
+                return false;
+            }
+            $user->balance -= $amount;
+            $user->save();
+            return true;
+        });
     }
 } 

@@ -36,10 +36,6 @@ class ShebaService
         if (!$user) {
             throw new \Exception('User not found', 404);
         }
-        if ($user->balance < $data['price']) {
-            throw new InsufficientBalanceException();
-        }
-
         return DB::transaction(function () use ($data, $user) {
             $shebaRequest = $this->shebaRequestRepository->create(new ShebaRequestData(
                 $user->id,
@@ -50,7 +46,9 @@ class ShebaService
                 $data['note'] ?? null
             ));
 
-            $this->userRepository->updateBalance($user->id, $data['price']);
+            if (!$this->userRepository->decrementBalanceWithLock($user->id, $data['price'])) {
+                throw new InsufficientBalanceException();
+            }
 
             $this->transactionRepository->create(new TransactionData(
                 $user->id,
