@@ -14,5 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        use App\Exceptions\InsufficientBalanceException;
+        use Illuminate\Http\Request;
+
+        $exceptions->render(function (InsufficientBalanceException $e, Request $request) {
+            return response()->json([
+                'message' => 'Insufficient balance',
+                'code' => 'INSUFFICIENT_BALANCE',
+            ], 400);
+        });
     })->create();
