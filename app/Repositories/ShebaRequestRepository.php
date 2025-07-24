@@ -6,6 +6,7 @@ use App\Models\ShebaRequest;
 use App\Repositories\ShebaRequestRepositoryInterface;
 use App\DTOs\ShebaRequestData;
 use App\DTOs\ShebaRequestFilterData;
+use App\DTOs\ShebaRequestStatusData;
 
 class ShebaRequestRepository implements ShebaRequestRepositoryInterface
 {
@@ -34,5 +35,17 @@ class ShebaRequestRepository implements ShebaRequestRepositoryInterface
             $query->where('user_id', $filter->user_id);
         }
         return $query->orderBy('created_at')->get();
+    }
+
+    public function updateStatus(int|string $id, ShebaRequestStatusData $data): ?ShebaRequest
+    {
+        $request = ShebaRequest::find($id);
+        if (!$request) return null;
+        $request->status = $data->status;
+        if ($data->note !== null) {
+            $request->note = $data->note;
+        }
+        $request->save();
+        return $request;
     }
 } 

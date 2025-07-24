@@ -13,6 +13,7 @@ use App\Exceptions\InsufficientBalanceException;
 use App\DTOs\TransactionData;
 use App\DTOs\ShebaRequestData;
 use App\DTOs\ShebaRequestFilterData;
+use App\DTOs\ShebaRequestStatusData;
 
 class ShebaService
 {
@@ -66,5 +67,29 @@ class ShebaService
     public function getFilteredRequests(ShebaRequestFilterData $filter): \Illuminate\Support\Collection
     {
         return $this->shebaRequestRepository->getFiltered($filter);
+    }
+
+    public function confirmOrCancelRequest(int|string $id, ShebaRequestStatusData $data): ?ShebaRequest
+    {
+        $request = $this->shebaRequestRepository->findById($id);
+        if (!$request) {
+            throw new \Exception('Request not found', 404);
+        }
+        if ($request->status !== ShebaRequest::STATUS_PENDING) {
+            throw new \Exception('Request is not pending', 400);
+        }
+        if ($data->status === ShebaRequest::STATUS_CANCELED) {
+            // بازگشت پول به کاربر و ثبت تراکنش credit
+            $this->userRepository->updateBalance($request->user_id, -$request->price); // افزایش موجودی
+            $this->transactionRepository->create(new TransactionData(
+                $request->user_id,
+                $request->price,
+                Transaction::TYPE_CREDIT,
+                Transaction::NOTE_CREDIT_SHEBA,
+                $request->id
+            ));
+        }
+        $updated = $this->shebaRequestRepository->updateStatus($id, $data);
+        return $updated;
     }
 } 

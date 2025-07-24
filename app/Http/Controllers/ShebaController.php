@@ -7,6 +7,7 @@ use App\Services\ShebaService;
 use App\DTOs\ShebaRequestFilterData;
 use App\Http\Resources\ShebaRequestResource;
 use Illuminate\Http\Request;
+use App\DTOs\ShebaRequestStatusData;
 
 class ShebaController extends Controller
 {
@@ -33,5 +34,18 @@ class ShebaController extends Controller
         );
         $requests = $this->shebaService->getFilteredRequests($filter);
         return ShebaRequestResource::collection($requests);
+    }
+
+    public function update(Request $request, int $id)
+    {
+        $data = new ShebaRequestStatusData(
+            $request->input('status'),
+            $request->input('note')
+        );
+        $shebaRequest = $this->shebaService->confirmOrCancelRequest($id, $data);
+        return response()->json([
+            'message' => $shebaRequest->status === \App\Models\ShebaRequest::STATUS_CONFIRMED ? 'Request is Confirmed!' : 'Request is Canceled',
+            'request' => new ShebaRequestResource($shebaRequest),
+        ]);
     }
 } 

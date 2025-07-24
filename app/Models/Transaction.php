@@ -20,6 +20,7 @@ class Transaction extends Model
     public const TYPE_DEBIT = 'debit';
     public const TYPE_CREDIT = 'credit';
     public const NOTE_DEBIT_SHEBA = 'کسر وجه بابت انتقال شبا';
+    public const NOTE_CREDIT_SHEBA = 'بازگشت وجه بابت لغو درخواست شبا';
 
     public function user()
     {

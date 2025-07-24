@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\ShebaRequest;
 use App\DTOs\ShebaRequestData;
 use App\DTOs\ShebaRequestFilterData;
+use App\DTOs\ShebaRequestStatusData;
 
 interface ShebaRequestRepositoryInterface
 {
@@ -12,4 +13,5 @@ interface ShebaRequestRepositoryInterface
     public function findById(int|string $id): ?ShebaRequest;
     public function getPendingOrdered(): \Illuminate\Support\Collection;
     public function getFiltered(ShebaRequestFilterData $filter): \Illuminate\Support\Collection;
+    public function updateStatus(int|string $id, ShebaRequestStatusData $data): ?ShebaRequest;
 } 
