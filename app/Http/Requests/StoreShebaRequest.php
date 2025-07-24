@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Rules\Sheba;
 
 class StoreShebaRequest extends FormRequest
 {
@@ -15,8 +17,8 @@ class StoreShebaRequest extends FormRequest
     {
         return [
             'price' => 'required|integer|min:1',
-            'fromShebaNumber' => 'required|string|regex:/^IR[0-9]{24}$/',
-            'toShebaNumber' => 'required|string|regex:/^IR[0-9]{24}$/',
+            'fromShebaNumber' => ['required', 'string', new Sheba],
+            'toShebaNumber' => ['required', 'string', new Sheba],
             'note' => 'nullable|string',
             'user_id' => 'required|exists:users,id',
         ];
