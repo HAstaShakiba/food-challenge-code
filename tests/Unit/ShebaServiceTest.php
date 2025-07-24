@@ -22,6 +22,10 @@ class ShebaServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const VALID_SHEBA_1 = 'IR123456789012345678901234';
+    private const VALID_SHEBA_2 = 'IR987654321098765432109876';
+    private const INVALID_SHEBA = 'IR000000000000000000000000';
+
     private $shebaRequestRepository;
     private $userRepository;
     private $transactionRepository;
@@ -48,11 +52,11 @@ class ShebaServiceTest extends TestCase
         $data = [
             'user_id' => 1,
             'price' => 500000,
-            'fromShebaNumber' => 'IR123456789012345678901234',
-            'toShebaNumber' => 'IR987654321098765432109876',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
         ];
-        $shebaRequest = new ShebaRequest($data + ['status' => ShebaRequest::STATUS_PENDING]);
+        $shebaRequest = new ShebaRequest($data + ['status' => \App\Models\ShebaRequest::STATUS_PENDING]);
 
         $this->userRepository->method('findById')->willReturn($user);
         $this->userRepository->method('decrementBalanceWithLock')->willReturn(true);
@@ -61,7 +65,7 @@ class ShebaServiceTest extends TestCase
 
         $result = $this->service->createShebaRequest($data);
         $this->assertInstanceOf(ShebaRequest::class, $result);
-        $this->assertEquals(ShebaRequest::STATUS_PENDING, $result->status);
+        $this->assertEquals(\App\Models\ShebaRequest::STATUS_PENDING, $result->status);
     }
 
     public function test_create_sheba_request_insufficient_balance()
@@ -72,8 +76,8 @@ class ShebaServiceTest extends TestCase
         $data = [
             'user_id' => 1,
             'price' => 5000,
-            'fromShebaNumber' => 'IR123456789012345678901234',
-            'toShebaNumber' => 'IR987654321098765432109876',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
         ];
         $this->userRepository->method('findById')->willReturn($user);
@@ -90,8 +94,8 @@ class ShebaServiceTest extends TestCase
         $data = [
             'user_id' => 1,
             'price' => 2000000,
-            'fromShebaNumber' => 'IR123456789012345678901234',
-            'toShebaNumber' => 'IR987654321098765432109876',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
         ];
         $this->userRepository->method('findById')->willReturn($user);
@@ -105,8 +109,8 @@ class ShebaServiceTest extends TestCase
         $data = [
             'user_id' => 1,
             'price' => 5000,
-            'fromShebaNumber' => 'IR123456789012345678901234',
-            'toShebaNumber' => 'IR987654321098765432109876',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
         ];
         $this->userRepository->method('findById')->willReturn(null);
@@ -116,9 +120,9 @@ class ShebaServiceTest extends TestCase
 
     public function test_get_filtered_requests()
     {
-        $filter = new ShebaRequestFilterData(ShebaRequest::STATUS_PENDING, 1);
+        $filter = new ShebaRequestFilterData(\App\Models\ShebaRequest::STATUS_PENDING, 1);
         $collection = new Collection([
-            new ShebaRequest(['id' => 1, 'status' => ShebaRequest::STATUS_PENDING]),
+            new ShebaRequest(['id' => 1, 'status' => \App\Models\ShebaRequest::STATUS_PENDING]),
         ]);
         $this->shebaRequestRepository->method('getFiltered')->with($filter)->willReturn($collection);
         $result = $this->service->getFilteredRequests($filter);
@@ -135,7 +139,7 @@ class ShebaServiceTest extends TestCase
             'id' => 10,
             'user_id' => 1,
             'price' => 500000,
-            'status' => ShebaRequest::STATUS_PENDING,
+            'status' => \App\Models\ShebaRequest::STATUS_PENDING,
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
@@ -145,9 +149,9 @@ class ShebaServiceTest extends TestCase
         });
         $this->userRepository->method('findById')->willReturn($user);
         $this->transactionRepository->method('create')->willReturn(new Transaction());
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $data = new \App\DTOs\ShebaRequestStatusData(\App\Models\ShebaRequest::STATUS_CONFIRMED, null);
         $result = $this->service->confirmOrCancelRequest(10, $data);
-        $this->assertEquals(ShebaRequest::STATUS_CONFIRMED, $result->status);
+        $this->assertEquals(\App\Models\ShebaRequest::STATUS_CONFIRMED, $result->status);
     }
 
     public function test_cancel_request_success()
@@ -159,7 +163,7 @@ class ShebaServiceTest extends TestCase
             'id' => 11,
             'user_id' => 1,
             'price' => 500000,
-            'status' => ShebaRequest::STATUS_PENDING,
+            'status' => \App\Models\ShebaRequest::STATUS_PENDING,
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
@@ -171,16 +175,16 @@ class ShebaServiceTest extends TestCase
         $this->userRepository->method('decrementBalanceWithLock')->willReturn(true);
         $this->userRepository->method('increaseBalanceWithLock')->willReturn(true);
         $this->transactionRepository->method('create')->willReturn(new Transaction());
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, 'لغو توسط اپراتور');
+        $data = new \App\DTOs\ShebaRequestStatusData(\App\Models\ShebaRequest::STATUS_CANCELED, 'لغو توسط اپراتور');
         $result = $this->service->confirmOrCancelRequest(11, $data);
-        $this->assertEquals(ShebaRequest::STATUS_CANCELED, $result->status);
+        $this->assertEquals(\App\Models\ShebaRequest::STATUS_CANCELED, $result->status);
         $this->assertEquals('لغو توسط اپراتور', $result->note);
     }
 
     public function test_confirm_or_cancel_request_not_found()
     {
         $this->shebaRequestRepository->method('findById')->willReturn(null);
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $data = new \App\DTOs\ShebaRequestStatusData(\App\Models\ShebaRequest::STATUS_CONFIRMED, null);
         $this->expectException(\Exception::class);
         $this->service->confirmOrCancelRequest(999, $data);
     }
@@ -194,11 +198,11 @@ class ShebaServiceTest extends TestCase
             'id' => 12,
             'user_id' => 1,
             'price' => 500000,
-            'status' => ShebaRequest::STATUS_CONFIRMED,
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->userRepository->method('findById')->willReturn($user);
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, null);
+        $data = new \App\DTOs\ShebaRequestStatusData(\App\Models\ShebaRequest::STATUS_CANCELED, null);
         $this->expectException(\Exception::class);
         $this->service->confirmOrCancelRequest(12, $data);
     }

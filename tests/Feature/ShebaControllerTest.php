@@ -10,14 +10,18 @@ class ShebaControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const VALID_SHEBA_1 = 'IR820540102680020817909002';
+    private const VALID_SHEBA_2 = 'IR062960000000100324200001';
+    private const INVALID_SHEBA = 'IR000000000000000000000000';
+
     public function test_create_sheba_request_success()
     {
         $user = User::factory()->create(['balance' => 1000000]);
         $payload = [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح تست',
         ];
         $response = $this->postJson('/api/sheba', $payload);
@@ -25,14 +29,14 @@ class ShebaControllerTest extends TestCase
             ->assertJsonFragment([
                 'message' => 'Request is saved successfully and is in pending status',
                 'price' => 500000,
-                'status' => 'pending',
-                'fromShebaNumber' => 'IR820540102680020817909002',
-                'toShebaNumber' => 'IR062960000000100324200001',
+                'status' => \App\Models\ShebaRequest::STATUS_PENDING,
+                'fromShebaNumber' => self::VALID_SHEBA_1,
+                'toShebaNumber' => self::VALID_SHEBA_2,
             ]);
         $this->assertDatabaseHas('sheba_requests', [
             'user_id' => $user->id,
             'price' => 500000,
-            'status' => 'pending',
+            'status' => \App\Models\ShebaRequest::STATUS_PENDING,
         ]);
     }
 
@@ -42,8 +46,8 @@ class ShebaControllerTest extends TestCase
         $payload = [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR000000000000000000000000', // نامعتبر
-            'toShebaNumber' => 'IR000000000000000000000000', // نامعتبر
+            'fromShebaNumber' => self::INVALID_SHEBA, // نامعتبر
+            'toShebaNumber' => self::INVALID_SHEBA, // نامعتبر
             'note' => 'توضیح تست',
         ];
         $response = $this->postJson('/api/sheba', $payload);
@@ -57,8 +61,8 @@ class ShebaControllerTest extends TestCase
         $payload = [
             'user_id' => $user->id,
             'price' => 5000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح تست',
         ];
         $response = $this->postJson('/api/sheba', $payload);
@@ -74,14 +78,14 @@ class ShebaControllerTest extends TestCase
         $this->postJson('/api/sheba', [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
         ]);
         $response = $this->getJson('/api/sheba?user_id=' . $user->id);
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'price' => 500000,
-                'status' => 'pending',
+                'status' => \App\Models\ShebaRequest::STATUS_PENDING,
             ]);
     }
 
@@ -91,21 +95,21 @@ class ShebaControllerTest extends TestCase
         $create = $this->postJson('/api/sheba', [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
         ]);
         $id = $create->json('request.id');
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => 'confirmed',
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'message' => 'Request is Confirmed!',
-                'status' => 'confirmed',
+                'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
             ]);
         $this->assertDatabaseHas('sheba_requests', [
             'id' => $id,
-            'status' => 'confirmed',
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
         ]);
     }
 
@@ -115,23 +119,23 @@ class ShebaControllerTest extends TestCase
         $create = $this->postJson('/api/sheba', [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
         ]);
         $id = $create->json('request.id');
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => 'canceled',
+            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
             'note' => 'لغو توسط تست',
         ]);
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'message' => 'Request is Canceled',
-                'status' => 'canceled',
+                'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
             ])
             ->assertJsonPath('request.note', 'لغو توسط تست');
         $this->assertDatabaseHas('sheba_requests', [
             'id' => $id,
-            'status' => 'canceled',
+            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
             'note' => 'لغو توسط تست',
         ]);
     }
@@ -139,7 +143,7 @@ class ShebaControllerTest extends TestCase
     public function test_confirm_or_cancel_request_not_found()
     {
         $response = $this->postJson('/api/sheba/999999', [
-            'status' => 'confirmed',
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response->assertStatus(404);
     }
@@ -150,15 +154,15 @@ class ShebaControllerTest extends TestCase
         $create = $this->postJson('/api/sheba', [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => 'IR820540102680020817909002',
-            'toShebaNumber' => 'IR062960000000100324200001',
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
         ]);
         $id = $create->json('request.id');
         $this->postJson('/api/sheba/' . $id, [
-            'status' => 'confirmed',
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => 'canceled',
+            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
         ]);
         $response->assertStatus(400);
     }
