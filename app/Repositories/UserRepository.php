@@ -23,4 +23,17 @@ class UserRepository implements UserRepositoryInterface
             return true;
         });
     }
+
+    public function increaseBalanceWithLock(int $userId, int $amount): bool
+    {
+        return \DB::transaction(function () use ($userId, $amount) {
+            $user = User::where('id', $userId)->lockForUpdate()->first();
+            if (!$user) {
+                return false;
+            }
+            $user->balance += $amount;
+            $user->save();
+            return true;
+        });
+    }
 } 

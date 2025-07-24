@@ -89,7 +89,7 @@ class ShebaServiceTest extends TestCase
         $user->balance = 1000000;
         $data = [
             'user_id' => 1,
-            'price' => 2000000, // بیشتر از موجودی
+            'price' => 2000000,
             'fromShebaNumber' => 'IR123456789012345678901234',
             'toShebaNumber' => 'IR987654321098765432109876',
             'note' => 'توضیح',
@@ -124,5 +124,82 @@ class ShebaServiceTest extends TestCase
         $result = $this->service->getFilteredRequests($filter);
         $this->assertInstanceOf(Collection::class, $result);
         $this->assertCount(1, $result);
+    }
+
+    public function test_confirm_request_success()
+    {
+        $user = new User();
+        $user->id = 1;
+        $user->balance = 1000000;
+        $request = new ShebaRequest([
+            'id' => 10,
+            'user_id' => 1,
+            'price' => 500000,
+            'status' => ShebaRequest::STATUS_PENDING,
+        ]);
+        $this->shebaRequestRepository->method('findById')->willReturn($request);
+        $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
+            $request->status = $data->status;
+            $request->note = $data->note;
+            return $request;
+        });
+        $this->userRepository->method('findById')->willReturn($user);
+        $this->transactionRepository->method('create')->willReturn(new Transaction());
+        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $result = $this->service->confirmOrCancelRequest(10, $data);
+        $this->assertEquals(ShebaRequest::STATUS_CONFIRMED, $result->status);
+    }
+
+    public function test_cancel_request_success()
+    {
+        $user = new User();
+        $user->id = 1;
+        $user->balance = 1000000;
+        $request = new ShebaRequest([
+            'id' => 11,
+            'user_id' => 1,
+            'price' => 500000,
+            'status' => ShebaRequest::STATUS_PENDING,
+        ]);
+        $this->shebaRequestRepository->method('findById')->willReturn($request);
+        $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
+            $request->status = $data->status;
+            $request->note = $data->note;
+            return $request;
+        });
+        $this->userRepository->method('findById')->willReturn($user);
+        $this->userRepository->method('decrementBalanceWithLock')->willReturn(true);
+        $this->userRepository->method('increaseBalanceWithLock')->willReturn(true);
+        $this->transactionRepository->method('create')->willReturn(new Transaction());
+        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, 'لغو توسط اپراتور');
+        $result = $this->service->confirmOrCancelRequest(11, $data);
+        $this->assertEquals(ShebaRequest::STATUS_CANCELED, $result->status);
+        $this->assertEquals('لغو توسط اپراتور', $result->note);
+    }
+
+    public function test_confirm_or_cancel_request_not_found()
+    {
+        $this->shebaRequestRepository->method('findById')->willReturn(null);
+        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $this->expectException(\Exception::class);
+        $this->service->confirmOrCancelRequest(999, $data);
+    }
+
+    public function test_confirm_or_cancel_request_not_pending()
+    {
+        $user = new User();
+        $user->id = 1;
+        $user->balance = 1000000;
+        $request = new ShebaRequest([
+            'id' => 12,
+            'user_id' => 1,
+            'price' => 500000,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
+        ]);
+        $this->shebaRequestRepository->method('findById')->willReturn($request);
+        $this->userRepository->method('findById')->willReturn($user);
+        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, null);
+        $this->expectException(\Exception::class);
+        $this->service->confirmOrCancelRequest(12, $data);
     }
 } 

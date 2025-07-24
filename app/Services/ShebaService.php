@@ -77,8 +77,9 @@ class ShebaService
             throw new \Exception('Request is not pending', 400);
         }
         if ($data->status === ShebaRequest::STATUS_CANCELED) {
-            // بازگشت پول به کاربر و ثبت تراکنش credit
-            $this->userRepository->updateBalance($request->user_id, -$request->price); // افزایش موجودی
+            if (!$this->userRepository->increaseBalanceWithLock($request->user_id, $request->price)) {
+                throw new \Exception('Failed to refund user', 500);
+            }
             $this->transactionRepository->create(new TransactionData(
                 $request->user_id,
                 $request->price,
