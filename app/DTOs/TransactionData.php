@@ -4,25 +4,13 @@ namespace App\DTOs;
 
 class TransactionData
 {
-    public int $user_id;
-    public int $amount;
-    public string $type;
-    public ?string $note;
-    public ?int $sheba_request_id;
-
     public function __construct(
-        int $user_id,
-        int $amount,
-        string $type,
-        ?string $note = null,
-        ?int $sheba_request_id = null
-    ) {
-        $this->user_id = $user_id;
-        $this->amount = $amount;
-        $this->type = $type;
-        $this->note = $note;
-        $this->sheba_request_id = $sheba_request_id;
-    }
+        public readonly int $user_id,
+        public readonly int $amount,
+        public readonly string $type,
+        public readonly ?string $note = null,
+        public readonly ?int $sheba_request_id = null,
+    ) {}
 
     public function toArray(): array
     {
@@ -34,4 +22,4 @@ class TransactionData
             'sheba_request_id' => $this->sheba_request_id,
         ];
     }
-} 
+}
