@@ -20,6 +20,7 @@ class ShebaRequestResource extends JsonResource
             'status' => $this->status,
             'fromShebaNumber' => $this->fromShebaNumber,
             'toShebaNumber' => $this->toShebaNumber,
+            'note' => $this->note,
             'createdAt' => $this->created_at ? $this->created_at->toIso8601String() : null,
         ];
     }
