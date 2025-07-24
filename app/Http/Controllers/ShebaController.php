@@ -38,14 +38,25 @@ class ShebaController extends Controller
 
     public function update(Request $request, int $id)
     {
-        $data = new ShebaRequestStatusData(
+        $data = new \App\DTOs\ShebaRequestStatusData(
             $request->input('status'),
             $request->input('note')
         );
-        $shebaRequest = $this->shebaService->confirmOrCancelRequest($id, $data);
+        try {
+            $shebaRequest = $this->shebaService->confirmOrCancelRequest($id, $data);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            if ($message === 'Request not found') {
+                return response()->json(['message' => $message], 404);
+            }
+            if ($message === 'Request is not pending') {
+                return response()->json(['message' => $message], 400);
+            }
+            return response()->json(['message' => $message], 500);
+        }
         return response()->json([
             'message' => $shebaRequest->status === \App\Models\ShebaRequest::STATUS_CONFIRMED ? 'Request is Confirmed!' : 'Request is Canceled',
-            'request' => new ShebaRequestResource($shebaRequest),
+            'request' => new \App\Http\Resources\ShebaRequestResource($shebaRequest),
         ]);
     }
 } 
