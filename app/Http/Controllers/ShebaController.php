@@ -105,6 +105,7 @@ class ShebaController extends Controller
             'request' => new ShebaRequestResource($shebaRequest),
         ], 201);
     }
+    
     /**
      * @OA\Post(
      *     path="/api/sheba/{id}",
