@@ -6,10 +6,6 @@ use App\Services\ShebaService;
 use App\Repositories\ShebaRequestRepositoryInterface;
 use App\Repositories\UserRepositoryInterface;
 use App\Repositories\TransactionRepositoryInterface;
-use App\DTOs\ShebaRequestData;
-use App\DTOs\ShebaRequestFilterData;
-use App\DTOs\ShebaRequestStatusData;
-use App\DTOs\TransactionData;
 use App\Models\ShebaRequest;
 use App\Models\Transaction;
 use App\Models\User;
@@ -124,7 +120,10 @@ class ShebaServiceTest extends TestCase
 
     public function test_get_filtered_requests()
     {
-        $filter = new ShebaRequestFilterData(ShebaRequest::STATUS_PENDING, 1);
+        $filter = [
+            'status' => ShebaRequest::STATUS_PENDING,
+            'user_id' => 1,
+        ];
         $collection = new Collection([
             new ShebaRequest(['id' => 1, 'status' => ShebaRequest::STATUS_PENDING]),
         ]);
@@ -147,13 +146,16 @@ class ShebaServiceTest extends TestCase
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
-            $request->status = $data->status;
-            $request->note = $data->note;
+            $request->status = $data['status'];
+            $request->note = $data['note'] ?? null;
             return $request;
         });
         $this->userRepository->method('findById')->willReturn($user);
         $this->transactionRepository->method('create')->willReturn(new Transaction());
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $data = [
+            'status' => ShebaRequest::STATUS_CONFIRMED,
+            'note' => null,
+        ];
         $result = $this->service->confirmOrCancelRequest(10, $data);
         $this->assertEquals(ShebaRequest::STATUS_CONFIRMED, $result->status);
     }
@@ -171,15 +173,18 @@ class ShebaServiceTest extends TestCase
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
-            $request->status = $data->status;
-            $request->note = $data->note;
+            $request->status = $data['status'];
+            $request->note = $data['note'] ?? null;
             return $request;
         });
         $this->userRepository->method('findById')->willReturn($user);
         $this->userRepository->method('decrementBalanceWithLock')->willReturn(true);
         $this->userRepository->method('increaseBalanceWithLock')->willReturn(true);
         $this->transactionRepository->method('create')->willReturn(new Transaction());
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, 'لغو توسط اپراتور');
+        $data = [
+            'status' => ShebaRequest::STATUS_CANCELED,
+            'note' => 'لغو توسط اپراتور',
+        ];
         $result = $this->service->confirmOrCancelRequest(11, $data);
         $this->assertEquals(ShebaRequest::STATUS_CANCELED, $result->status);
         $this->assertEquals('لغو توسط اپراتور', $result->note);
@@ -188,7 +193,10 @@ class ShebaServiceTest extends TestCase
     public function test_confirm_or_cancel_request_not_found()
     {
         $this->shebaRequestRepository->method('findById')->willReturn(null);
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CONFIRMED, null);
+        $data = [
+            'status' => ShebaRequest::STATUS_CONFIRMED,
+            'note' => null,
+        ];
         $this->expectException(\Exception::class);
         $this->service->confirmOrCancelRequest(999, $data);
     }
@@ -206,7 +214,10 @@ class ShebaServiceTest extends TestCase
         ]);
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->userRepository->method('findById')->willReturn($user);
-        $data = new \App\DTOs\ShebaRequestStatusData(ShebaRequest::STATUS_CANCELED, null);
+        $data = [
+            'status' => ShebaRequest::STATUS_CANCELED,
+            'note' => null,
+        ];
         $this->expectException(\Exception::class);
         $this->service->confirmOrCancelRequest(12, $data);
     }

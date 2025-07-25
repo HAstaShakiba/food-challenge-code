@@ -12,8 +12,6 @@ use App\Repositories\TransactionRepositoryInterface;
 use App\Exceptions\InsufficientBalanceException;
 use App\DTOs\TransactionData;
 use App\DTOs\ShebaRequestData;
-use App\DTOs\ShebaRequestFilterData;
-use App\DTOs\ShebaRequestStatusData;
 use Illuminate\Support\Collection;
 
 class ShebaService
@@ -66,7 +64,7 @@ class ShebaService
         });
     }
 
-    public function getFilteredRequests(ShebaRequestFilterData $filter): Collection
+    public function getFilteredRequests(array $filter): Collection
     {
         return $this->shebaRequestRepository->getFiltered($filter);
     }
@@ -74,7 +72,7 @@ class ShebaService
     /**
      * @throws \Exception
      */
-    public function confirmOrCancelRequest(int|string $id, ShebaRequestStatusData $data): ?ShebaRequest
+    public function confirmOrCancelRequest(int|string $id, array $data): ?ShebaRequest
     {
         $request = $this->shebaRequestRepository->findById($id);
         if (!$request) {
@@ -83,7 +81,7 @@ class ShebaService
         if ($request->status !== ShebaRequest::STATUS_PENDING) {
             throw new \Exception('Request is not pending', 400);
         }
-        if ($data->status === ShebaRequest::STATUS_CANCELED) {
+        if (($data['status'] ?? null) === ShebaRequest::STATUS_CANCELED) {
             if (!$this->userRepository->increaseBalanceWithLock($request->user_id, $request->price)) {
                 throw new \Exception('Failed to refund user', 500);
             }
@@ -95,7 +93,6 @@ class ShebaService
                 $request->id
             ));
         }
-
         return $this->shebaRequestRepository->updateStatus($id, $data);
     }
 }
