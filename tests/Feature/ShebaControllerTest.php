@@ -166,4 +166,56 @@ class ShebaControllerTest extends TestCase
         ]);
         $response->assertStatus(400);
     }
+
+    public function test_update_sheba_request_missing_status()
+    {
+        $user = User::factory()->create(['balance' => 1000000]);
+        $create = $this->postJson('/api/sheba', [
+            'user_id' => $user->id,
+            'price' => 500000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+        ]);
+        $id = $create->json('request.id');
+        $response = $this->postJson('/api/sheba/' . $id, [
+            // status is missing
+        ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_update_sheba_request_invalid_status_value()
+    {
+        $user = User::factory()->create(['balance' => 1000000]);
+        $create = $this->postJson('/api/sheba', [
+            'user_id' => $user->id,
+            'price' => 500000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+        ]);
+        $id = $create->json('request.id');
+        $response = $this->postJson('/api/sheba/' . $id, [
+            'status' => 'invalid_status',
+        ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_update_sheba_request_invalid_note_type()
+    {
+        $user = User::factory()->create(['balance' => 1000000]);
+        $create = $this->postJson('/api/sheba', [
+            'user_id' => $user->id,
+            'price' => 500000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+        ]);
+        $id = $create->json('request.id');
+        $response = $this->postJson('/api/sheba/' . $id, [
+            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'note' => 12345, // invalid type
+        ]);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['note']);
+    }
 } 

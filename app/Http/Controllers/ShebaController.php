@@ -11,6 +11,7 @@ use App\DTOs\ShebaRequestStatusData;
 use App\Models\ShebaRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Http\Requests\UpdateShebaRequestStatus;
 
 class ShebaController extends Controller
 {
@@ -146,7 +147,7 @@ class ShebaController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, int $id) : JsonResponse
+    public function update(UpdateShebaRequestStatus $request, int $id) : JsonResponse
     {
         $data = new ShebaRequestStatusData(
             $request->input('status'),
