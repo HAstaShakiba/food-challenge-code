@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreShebaRequest;
 use App\Services\ShebaService;
-use App\DTOs\ShebaRequestFilterData;
 use App\Http\Resources\ShebaRequestResource;
 use Illuminate\Http\Request;
-use App\DTOs\ShebaRequestStatusData;
 use App\Models\ShebaRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -100,11 +98,10 @@ class ShebaController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $filter = new ShebaRequestFilterData(
-            $request->query('status'),
-            $request->query('user_id') ? (int)$request->query('user_id') : null
-        );
-        $requests = $this->shebaService->getFilteredRequests($filter);
+        $requests = $this->shebaService->getFilteredRequests([
+            'status' => $request->query('status'),
+            'user_id' => $request->whenFilled('user_id', fn($id) => (int) $id),
+        ]);
         return ShebaRequestResource::collection($requests);
     }
 
@@ -149,12 +146,8 @@ class ShebaController extends Controller
      */
     public function update(UpdateShebaRequestStatus $request, int $id) : JsonResponse
     {
-        $data = new ShebaRequestStatusData(
-            $request->input('status'),
-            $request->input('note')
-        );
         try {
-            $shebaRequest = $this->shebaService->confirmOrCancelRequest($id, $data);
+            $shebaRequest = $this->shebaService->confirmOrCancelRequest($id, $request->validated());
         } catch (\Exception $e) {
             $message = $e->getMessage();
             if ($message === 'Request not found') {
