@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\ShebaRequest;
-use App\Models\User;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\ShebaRequestRepositoryInterface;
