@@ -7,6 +7,7 @@ use App\Repositories\ShebaRequestRepositoryInterface;
 use App\DTOs\ShebaRequestData;
 use App\DTOs\ShebaRequestFilterData;
 use App\DTOs\ShebaRequestStatusData;
+use Illuminate\Support\Collection;
 
 class ShebaRequestRepository implements ShebaRequestRepositoryInterface
 {
@@ -20,12 +21,12 @@ class ShebaRequestRepository implements ShebaRequestRepositoryInterface
         return ShebaRequest::find($id);
     }
 
-    public function getPendingOrdered(): \Illuminate\Support\Collection
+    public function getPendingOrdered(): Collection
     {
         return ShebaRequest::where('status', ShebaRequest::STATUS_PENDING)->orderBy('created_at')->get();
     }
 
-    public function getFiltered(ShebaRequestFilterData $filter): \Illuminate\Support\Collection
+    public function getFiltered(ShebaRequestFilterData $filter): Collection
     {
         $query = ShebaRequest::query();
         if ($filter->status) {
@@ -48,4 +49,4 @@ class ShebaRequestRepository implements ShebaRequestRepositoryInterface
         $request->save();
         return $request;
     }
-} 
+}

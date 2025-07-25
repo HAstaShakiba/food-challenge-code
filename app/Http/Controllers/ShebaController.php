@@ -9,10 +9,12 @@ use App\Http\Resources\ShebaRequestResource;
 use Illuminate\Http\Request;
 use App\DTOs\ShebaRequestStatusData;
 use App\Models\ShebaRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ShebaController extends Controller
 {
-    protected $shebaService;
+    protected ShebaService $shebaService;
     public function __construct(ShebaService $shebaService)
     {
         $this->shebaService = $shebaService;
@@ -22,24 +24,30 @@ class ShebaController extends Controller
      * @OA\Post(
      *     path="/api/sheba",
      *     summary="Create a new Sheba transfer request",
-     *     description="Creates a new Sheba transfer request, reserves the amount from the user's balance, and sets the request to pending status.",
-     *     tags={"Sheba"},
+     *     description="Creates a new Sheba transfer request, reserves the amount from the user's
+     *     balance, and sets the request to pending status.", tags={"Sheba"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"user_id","price","fromShebaNumber","toShebaNumber"},
-     *             @OA\Property(property="user_id", type="integer", example=1, description="User ID"),
-     *             @OA\Property(property="price", type="integer", example=500000, description="Transfer amount"),
-     *             @OA\Property(property="fromShebaNumber", type="string", example="IR820540102680020817909002", description="Source Sheba number"),
-     *             @OA\Property(property="toShebaNumber", type="string", example="IR062960000000100324200001", description="Destination Sheba number"),
-     *             @OA\Property(property="note", type="string", example="Test note", description="Optional note")
+     *             @OA\Property(property="user_id", type="integer", example=1, description="User
+     *     ID"),
+     *             @OA\Property(property="price", type="integer", example=500000,
+     *     description="Transfer amount"),
+     *             @OA\Property(property="fromShebaNumber", type="string",
+     *     example="IR820540102680020817909002", description="Source Sheba number"),
+     *             @OA\Property(property="toShebaNumber", type="string",
+     *     example="IR062960000000100324200001", description="Destination Sheba number"),
+     *             @OA\Property(property="note", type="string", example="Test note",
+     *     description="Optional note")
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
      *         description="Request successfully created and set to pending status.",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Request is saved successfully and is in pending status"),
+     *             @OA\Property(property="message", type="string", example="Request is saved
+     *     successfully and is in pending status"),
      *             @OA\Property(property="request", ref="#/components/schemas/ShebaRequestResource")
      *         )
      *     ),
@@ -48,8 +56,9 @@ class ShebaController extends Controller
      *         description="Validation error or insufficient balance."
      *     )
      * )
+     * @throws \Exception
      */
-    public function store(StoreShebaRequest $request)
+    public function store(StoreShebaRequest $request) : JsonResponse
     {
         $shebaRequest = $this->shebaService->createShebaRequest($request->validated());
         return response()->json([
@@ -88,7 +97,7 @@ class ShebaController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
         $filter = new ShebaRequestFilterData(
             $request->query('status'),
@@ -137,7 +146,7 @@ class ShebaController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id) : JsonResponse
     {
         $data = new ShebaRequestStatusData(
             $request->input('status'),

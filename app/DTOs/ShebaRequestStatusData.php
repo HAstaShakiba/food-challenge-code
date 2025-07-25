@@ -2,10 +2,10 @@
 
 namespace App\DTOs;
 
-class ShebaRequestStatusData
+readonly class ShebaRequestStatusData
 {
     public function __construct(
-        public readonly string $status,
-        public readonly ?string $note = null,
+        public string $status,
+        public ?string $note = null,
     ) {}
-} 
+}

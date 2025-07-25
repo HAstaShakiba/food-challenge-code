@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use App\Rules\Sheba;
 
 /**
@@ -22,12 +21,7 @@ use App\Rules\Sheba;
  */
 class StoreShebaRequest extends FormRequest
 {
-    public function authorize()
-    {
-        return true;
-    }
-
-    public function rules()
+    public function rules() : array
     {
         return [
             'price' => 'required|integer|min:1',
@@ -37,4 +31,4 @@ class StoreShebaRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
         ];
     }
-} 
+}

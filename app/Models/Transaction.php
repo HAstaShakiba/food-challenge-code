@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
@@ -22,13 +23,13 @@ class Transaction extends Model
     public const NOTE_DEBIT_SHEBA = 'کسر وجه بابت انتقال شبا';
     public const NOTE_CREDIT_SHEBA = 'بازگشت وجه بابت لغو درخواست شبا';
 
-    public function user()
+    public function user() : BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function shebaRequest()
+    public function shebaRequest() : BelongsTo
     {
         return $this->belongsTo(ShebaRequest::class);
     }
-} 
+}

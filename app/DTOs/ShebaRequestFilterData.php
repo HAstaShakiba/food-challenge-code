@@ -2,10 +2,10 @@
 
 namespace App\DTOs;
 
-class ShebaRequestFilterData
+readonly class ShebaRequestFilterData
 {
     public function __construct(
-        public readonly ?string $status = null,
-        public readonly ?int $user_id = null,
+        public ?string $status = null,
+        public ?int $user_id = null,
     ) {}
-} 
+}

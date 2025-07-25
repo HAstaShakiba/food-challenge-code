@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 /**
  * @OA\Schema(
@@ -27,7 +28,7 @@ class ShebaRequestResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array<string, mixed>
      */
-    public function toArray($request)
+    public function toArray(Request $request) : array
     {
         return [
             'id' => $this->id,
@@ -39,4 +40,4 @@ class ShebaRequestResource extends JsonResource
             'createdAt' => $this->created_at ? $this->created_at->toIso8601String() : null,
         ];
     }
-} 
+}

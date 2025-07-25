@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShebaRequest extends Model
 {
@@ -22,8 +23,8 @@ class ShebaRequest extends Model
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_CANCELED = 'canceled';
 
-    public function user()
+    public function user() : BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-} 
+}

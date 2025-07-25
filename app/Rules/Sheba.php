@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Rule;
 
 class Sheba implements Rule
 {
-    public function passes($attribute, $value)
+    public function passes($attribute, $value) : bool
     {
         if (!preg_match('/^IR[0-9]{24}$/', $value)) {
             return false;
@@ -20,8 +20,8 @@ class Sheba implements Rule
         return bcmod($iban, 97) == 1;
     }
 
-    public function message()
+    public function message() : string
     {
         return 'شماره شبا نامعتبر است.';
     }
-} 
+}

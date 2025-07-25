@@ -2,15 +2,15 @@
 
 namespace App\DTOs;
 
-class ShebaRequestData
+readonly class ShebaRequestData
 {
     public function __construct(
-        public readonly int $user_id,
-        public readonly int $price,
-        public readonly string $status,
-        public readonly string $fromShebaNumber,
-        public readonly string $toShebaNumber,
-        public readonly ?string $note = null,
+        public int $user_id,
+        public int $price,
+        public string $status,
+        public string $fromShebaNumber,
+        public string $toShebaNumber,
+        public ?string $note = null,
     ) {}
 
     public function toArray(): array
@@ -24,4 +24,4 @@ class ShebaRequestData
             'note' => $this->note,
         ];
     }
-} 
+}

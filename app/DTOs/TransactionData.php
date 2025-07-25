@@ -2,14 +2,14 @@
 
 namespace App\DTOs;
 
-class TransactionData
+readonly class TransactionData
 {
     public function __construct(
-        public readonly int $user_id,
-        public readonly int $amount,
-        public readonly string $type,
-        public readonly ?string $note = null,
-        public readonly ?int $sheba_request_id = null,
+        public int $user_id,
+        public int $amount,
+        public string $type,
+        public ?string $note = null,
+        public ?int $sheba_request_id = null,
     ) {}
 
     public function toArray(): array

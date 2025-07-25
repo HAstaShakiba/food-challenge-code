@@ -14,12 +14,13 @@ use App\DTOs\TransactionData;
 use App\DTOs\ShebaRequestData;
 use App\DTOs\ShebaRequestFilterData;
 use App\DTOs\ShebaRequestStatusData;
+use Illuminate\Support\Collection;
 
 class ShebaService
 {
-    protected $shebaRequestRepository;
-    protected $userRepository;
-    protected $transactionRepository;
+    protected ShebaRequestRepositoryInterface $shebaRequestRepository;
+    protected UserRepositoryInterface        $userRepository;
+    protected TransactionRepositoryInterface $transactionRepository;
     public function __construct(
         ShebaRequestRepositoryInterface $shebaRequestRepository,
         UserRepositoryInterface $userRepository,
@@ -30,6 +31,9 @@ class ShebaService
         $this->transactionRepository = $transactionRepository;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function createShebaRequest(array $data): ShebaRequest
     {
         $user = $this->userRepository->findById($data['user_id']);
@@ -62,11 +66,14 @@ class ShebaService
         });
     }
 
-    public function getFilteredRequests(ShebaRequestFilterData $filter): \Illuminate\Support\Collection
+    public function getFilteredRequests(ShebaRequestFilterData $filter): Collection
     {
         return $this->shebaRequestRepository->getFiltered($filter);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function confirmOrCancelRequest(int|string $id, ShebaRequestStatusData $data): ?ShebaRequest
     {
         $request = $this->shebaRequestRepository->findById($id);
@@ -88,7 +95,7 @@ class ShebaService
                 $request->id
             ));
         }
-        $updated = $this->shebaRequestRepository->updateStatus($id, $data);
-        return $updated;
+
+        return $this->shebaRequestRepository->updateStatus($id, $data);
     }
-} 
+}
