@@ -24,11 +24,11 @@ class StoreShebaRequest extends FormRequest
     public function rules() : array
     {
         return [
-            'price' => 'required|integer|min:1',
+            'price' => ['required', 'integer', 'min:1'],
             'fromShebaNumber' => ['required', 'string', new Sheba],
             'toShebaNumber' => ['required', 'string', new Sheba],
-            'note' => 'nullable|string',
-            'user_id' => 'required|exists:users,id',
+            'note' => ['nullable', 'string'],
+            'user_id' => ['required', 'exists:users,id'],
         ];
     }
 }

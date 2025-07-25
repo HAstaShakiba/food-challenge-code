@@ -20,8 +20,8 @@ class UpdateShebaRequestStatus extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => 'required|string|in:confirmed,canceled',
-            'note' => 'nullable|string',
+            'status' => ['required', 'string', 'in:confirmed,canceled'],
+            'note' => ['nullable', 'string'],
         ];
     }
 } 
