@@ -20,53 +20,6 @@ class ShebaController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/sheba",
-     *     summary="Create a new Sheba transfer request",
-     *     description="Creates a new Sheba transfer request, reserves the amount from the user's
-     *     balance, and sets the request to pending status.", tags={"Sheba"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id","price","fromShebaNumber","toShebaNumber"},
-     *             @OA\Property(property="user_id", type="integer", example=1, description="User
-     *     ID"),
-     *             @OA\Property(property="price", type="integer", example=500000,
-     *     description="Transfer amount"),
-     *             @OA\Property(property="fromShebaNumber", type="string",
-     *     example="IR820540102680020817909002", description="Source Sheba number"),
-     *             @OA\Property(property="toShebaNumber", type="string",
-     *     example="IR062960000000100324200001", description="Destination Sheba number"),
-     *             @OA\Property(property="note", type="string", example="Test note",
-     *     description="Optional note")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Request successfully created and set to pending status.",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Request is saved
-     *     successfully and is in pending status"),
-     *             @OA\Property(property="request", ref="#/components/schemas/ShebaRequestResource")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Validation error or insufficient balance."
-     *     )
-     * )
-     * @throws \Exception
-     */
-    public function store(StoreShebaRequest $request) : JsonResponse
-    {
-        $shebaRequest = $this->shebaService->createShebaRequest($request->validated());
-        return response()->json([
-            'message' => 'Request is saved successfully and is in pending status',
-            'request' => new ShebaRequestResource($shebaRequest),
-        ], 201);
-    }
-
-    /**
      * @OA\Get(
      *     path="/api/sheba",
      *     summary="List Sheba transfer requests (for operator)",
@@ -105,6 +58,53 @@ class ShebaController extends Controller
         return ShebaRequestResource::collection($requests);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/sheba",
+     *     summary="Create a new Sheba transfer request",
+     *     description="Creates a new Sheba transfer request, reserves the amount from the user's
+     *     balance, and sets the request to pending status.", tags={"Sheba"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"user_id","price","fromShebaNumber","toShebaNumber"},
+     *             @OA\Property(property="user_id", type="integer", example=1, description="User
+     *     ID"),
+     *             @OA\Property(property="price", type="integer", example=500000,
+     *     description="Transfer amount"),
+     *             @OA\Property(property="fromShebaNumber", type="string",
+     *     example="IR820540102680020817909002", description="Source Sheba number"),
+     *             @OA\Property(property="toShebaNumber", type="string",
+     *     example="IR062960000000100324200001", description="Destination Sheba number"),
+     *             @OA\Property(property="note", type="string", example="Test note",
+     *     description="Optional note")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Request successfully created and set to pending status.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Request is saved
+     *     successfully and is in pending status"),
+     *             @OA\Property(property="request", ref="#/components/schemas/ShebaRequestResource")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation error or insufficient balance."
+     *     )
+     * )
+     * @throws \Exception
+     */
+    
+    public function store(StoreShebaRequest $request) : JsonResponse
+    {
+        $shebaRequest = $this->shebaService->createShebaRequest($request->validated());
+        return response()->json([
+            'message' => 'Request is saved successfully and is in pending status',
+            'request' => new ShebaRequestResource($shebaRequest),
+        ], 201);
+    }
     /**
      * @OA\Post(
      *     path="/api/sheba/{id}",
