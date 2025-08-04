@@ -87,35 +87,6 @@ class ShebaServiceTest extends TestCase
         $this->service->createShebaRequest($data);
     }
 
-    public function test_create_sheba_request_race_condition()
-    {
-        $user = new User();
-        $user->id = 1;
-        $user->balance = 1000000;
-
-        $data = [
-            'user_id' => 1,
-            'price' => 800000,
-            'fromShebaNumber' => self::VALID_SHEBA_1,
-            'toShebaNumber' => self::VALID_SHEBA_2,
-            'note' => 'توضیح',
-        ];
-
-        $this->userRepository->method('findById')->willReturn($user);
-
-        $this->userRepository->method('decrementBalanceWithLock')
-            ->with(1, 800000)
-            ->willReturn(false);
-
-        $shebaRequest = new ShebaRequest($data);
-        $this->shebaRequestRepository->method('create')->willReturn($shebaRequest);
-
-        $this->expectException(InsufficientBalanceException::class);
-        $this->expectExceptionMessage('Insufficient balance');
-
-        $this->service->createShebaRequest($data);
-    }
-
     public function test_create_sheba_request_race_condition_with_concurrent_requests()
     {
         $user = new User();
@@ -139,7 +110,6 @@ class ShebaServiceTest extends TestCase
         ];
 
         $this->userRepository->method('findById')->willReturn($user);
-
         $this->userRepository->method('decrementBalanceWithLock')
             ->willReturnOnConsecutiveCalls(true, false); // First call succeeds, second fails
 
@@ -165,7 +135,6 @@ class ShebaServiceTest extends TestCase
         $user = new User();
         $user->id = 1;
         $user->balance = 1000000;
-
         $data = [
             'user_id' => 1,
             'price' => 800000,
@@ -175,7 +144,6 @@ class ShebaServiceTest extends TestCase
         ];
 
         $this->userRepository->method('findById')->willReturn($user);
-
         $this->userRepository->method('decrementBalanceWithLock')
             ->with(1, 800000)
             ->willReturn(false);
@@ -228,6 +196,7 @@ class ShebaServiceTest extends TestCase
             'price' => 500000,
             'status' => ShebaRequest::STATUS_PENDING,
         ]);
+
         $this->shebaRequestRepository->method('findById')->willReturn($request);
         $this->shebaRequestRepository->method('updateStatus')->willReturnCallback(function ($id, $data) use ($request) {
             $request->status = $data['status'];
