@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Models\ShebaRequest;
 
 class ShebaControllerTest extends TestCase
 {
@@ -29,14 +30,14 @@ class ShebaControllerTest extends TestCase
             ->assertJsonFragment([
                 'message' => 'Request is saved successfully and is in pending status',
                 'price' => 500000,
-                'status' => \App\Models\ShebaRequest::STATUS_PENDING,
+                'status' => ShebaRequest::STATUS_PENDING,
                 'fromShebaNumber' => self::VALID_SHEBA_1,
                 'toShebaNumber' => self::VALID_SHEBA_2,
             ]);
         $this->assertDatabaseHas('sheba_requests', [
             'user_id' => $user->id,
             'price' => 500000,
-            'status' => \App\Models\ShebaRequest::STATUS_PENDING,
+            'status' => ShebaRequest::STATUS_PENDING,
         ]);
     }
 
@@ -46,8 +47,8 @@ class ShebaControllerTest extends TestCase
         $payload = [
             'user_id' => $user->id,
             'price' => 500000,
-            'fromShebaNumber' => self::INVALID_SHEBA, // نامعتبر
-            'toShebaNumber' => self::INVALID_SHEBA, // نامعتبر
+            'fromShebaNumber' => self::INVALID_SHEBA,
+            'toShebaNumber' => self::INVALID_SHEBA,
             'note' => 'توضیح تست',
         ];
         $response = $this->postJson('/api/sheba', $payload);
@@ -85,7 +86,7 @@ class ShebaControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'price' => 500000,
-                'status' => \App\Models\ShebaRequest::STATUS_PENDING,
+                'status' => ShebaRequest::STATUS_PENDING,
             ]);
     }
 
@@ -100,16 +101,16 @@ class ShebaControllerTest extends TestCase
         ]);
         $id = $create->json('request.id');
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'message' => 'Request is Confirmed!',
-                'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+                'status' => ShebaRequest::STATUS_CONFIRMED,
             ]);
         $this->assertDatabaseHas('sheba_requests', [
             'id' => $id,
-            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
         ]);
     }
 
@@ -124,18 +125,18 @@ class ShebaControllerTest extends TestCase
         ]);
         $id = $create->json('request.id');
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
+            'status' => ShebaRequest::STATUS_CANCELED,
             'note' => 'لغو توسط تست',
         ]);
         $response->assertStatus(200)
             ->assertJsonFragment([
                 'message' => 'Request is Canceled',
-                'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
+                'status' => ShebaRequest::STATUS_CANCELED,
             ])
             ->assertJsonPath('request.note', 'لغو توسط تست');
         $this->assertDatabaseHas('sheba_requests', [
             'id' => $id,
-            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
+            'status' => ShebaRequest::STATUS_CANCELED,
             'note' => 'لغو توسط تست',
         ]);
     }
@@ -143,7 +144,7 @@ class ShebaControllerTest extends TestCase
     public function test_confirm_or_cancel_request_not_found()
     {
         $response = $this->postJson('/api/sheba/999999', [
-            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response->assertStatus(404);
     }
@@ -159,10 +160,10 @@ class ShebaControllerTest extends TestCase
         ]);
         $id = $create->json('request.id');
         $this->postJson('/api/sheba/' . $id, [
-            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
         ]);
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => \App\Models\ShebaRequest::STATUS_CANCELED,
+            'status' => ShebaRequest::STATUS_CANCELED,
         ]);
         $response->assertStatus(400);
     }
@@ -212,10 +213,10 @@ class ShebaControllerTest extends TestCase
         ]);
         $id = $create->json('request.id');
         $response = $this->postJson('/api/sheba/' . $id, [
-            'status' => \App\Models\ShebaRequest::STATUS_CONFIRMED,
+            'status' => ShebaRequest::STATUS_CONFIRMED,
             'note' => 12345, // invalid type
         ]);
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['note']);
     }
-} 
+}
