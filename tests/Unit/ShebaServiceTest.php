@@ -52,8 +52,9 @@ class ShebaServiceTest extends TestCase
             'fromShebaNumber' => self::VALID_SHEBA_1,
             'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
+            'status' => ShebaRequest::STATUS_PENDING
         ];
-        $shebaRequest = new ShebaRequest($data + ['status' => ShebaRequest::STATUS_PENDING]);
+        $shebaRequest = new ShebaRequest($data);
 
         // ACT
         $this->userRepository->method('findById')->willReturn($user);
@@ -91,15 +92,98 @@ class ShebaServiceTest extends TestCase
         $user = new User();
         $user->id = 1;
         $user->balance = 1000000;
+
         $data = [
             'user_id' => 1,
-            'price' => 2000000,
+            'price' => 800000,
             'fromShebaNumber' => self::VALID_SHEBA_1,
             'toShebaNumber' => self::VALID_SHEBA_2,
             'note' => 'توضیح',
         ];
+
         $this->userRepository->method('findById')->willReturn($user);
-        $this->userRepository->method('decrementBalanceWithLock')->willReturn(false);
+
+        $this->userRepository->method('decrementBalanceWithLock')
+            ->with(1, 800000)
+            ->willReturn(false);
+
+        $shebaRequest = new ShebaRequest($data);
+        $this->shebaRequestRepository->method('create')->willReturn($shebaRequest);
+
+        $this->expectException(InsufficientBalanceException::class);
+        $this->expectExceptionMessage('Insufficient balance');
+
+        $this->service->createShebaRequest($data);
+    }
+
+    public function test_create_sheba_request_race_condition_with_concurrent_requests()
+    {
+        $user = new User();
+        $user->id = 1;
+        $user->balance = 1000000;
+
+        $data1 = [
+            'user_id' => 1,
+            'price' => 600000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+            'note' => 'Request 1',
+        ];
+
+        $data2 = [
+            'user_id' => 1,
+            'price' => 500000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+            'note' => 'Request 2',
+        ];
+
+        $this->userRepository->method('findById')->willReturn($user);
+
+        $this->userRepository->method('decrementBalanceWithLock')
+            ->willReturnOnConsecutiveCalls(true, false); // First call succeeds, second fails
+
+        $shebaRequest1 = new ShebaRequest($data1);
+        $shebaRequest1->status = ShebaRequest::STATUS_PENDING;
+        $shebaRequest2 = new ShebaRequest($data2);
+        $shebaRequest2->status = ShebaRequest::STATUS_PENDING;
+        $this->shebaRequestRepository->method('create')
+            ->willReturnOnConsecutiveCalls($shebaRequest1, $shebaRequest2);
+
+        $this->transactionRepository->method('create')->willReturn(new Transaction());
+
+        $result1 = $this->service->createShebaRequest($data1);
+        $this->assertInstanceOf(ShebaRequest::class, $result1);
+        $this->assertEquals(ShebaRequest::STATUS_PENDING, $result1->status);
+
+        $this->expectException(InsufficientBalanceException::class);
+        $this->service->createShebaRequest($data2);
+    }
+
+    public function test_create_sheba_request_race_condition_with_balance_change()
+    {
+        $user = new User();
+        $user->id = 1;
+        $user->balance = 1000000;
+
+        $data = [
+            'user_id' => 1,
+            'price' => 800000,
+            'fromShebaNumber' => self::VALID_SHEBA_1,
+            'toShebaNumber' => self::VALID_SHEBA_2,
+            'note' => 'Race condition test',
+        ];
+
+        $this->userRepository->method('findById')->willReturn($user);
+
+        $this->userRepository->method('decrementBalanceWithLock')
+            ->with(1, 800000)
+            ->willReturn(false);
+
+        $shebaRequest = new ShebaRequest($data);
+        $shebaRequest->status = ShebaRequest::STATUS_PENDING;
+        $this->shebaRequestRepository->method('create')->willReturn($shebaRequest);
+
         $this->expectException(InsufficientBalanceException::class);
         $this->service->createShebaRequest($data);
     }
